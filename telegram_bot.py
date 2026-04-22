@@ -58,17 +58,32 @@ def format_message(data: dict, win_rate_info: dict) -> str:
     # Kẻ ngang dùng ký tự Unicode (Telegram HTML mode hỗ trợ)
     sep = "━━━━━━━━━━━━━━━━━━"
 
+    # TP3 chỉ hiện khi có weekly target
+    tp2     = data.get("tp2")
+    tp3     = data.get("tp3")
+    rr_tp2  = data.get("rr_tp2", "")
+    d1_bias = data.get("daily_bias", "")
+
+    tp_lines = [
+        f"🎯 TP1    : <b>{data['tp1']}</b>  (internal liq — RR {data.get('rr','?')}R)",
+    ]
+    if tp2 is not None:
+        tp_lines.append(f"🎯 TP2    : <b>{tp2}</b>  (PDH/PDL     — RR {rr_tp2}R)")
+    if tp3 is not None:
+        tp_lines.append(f"🎯 TP3    : <b>{tp3}</b>  (weekly liq  — optional)")
+
     lines = [
         f"{signal_emoji} <b>{signal_label} {symbol_display}</b> | ICT Setup",
         sep,
         f"📍 Entry  : <b>{data['entry']}</b>",
         f"🛑 SL     : <b>{data['sl']}</b>",
-        f"🎯 TP1    : <b>{data['tp1']}</b>  (50%)",
-        f"🎯 TP2    : <b>{data['tp2']}</b>  (50%)",
+        *tp_lines,
+        f"📦 Lot    : <b>{data['lot_half']}×2</b>  (risk ${data['risk_usd']})",
         sep,
         f"📊 Setup  : {data['setup']}",
         f"⏰ Zone   : {data['zone']}",
-        f"📈 H4 Bias: {data['bias']}",
+        f"📈 Bias   : D1 {d1_bias} → H4 {data['bias']}",
+        f"🔑 Swept  : {data.get('level_swept', '')}",
         f"📉 Win Rate (30d): {wr_text}",
         f"🕐 {time_display}",
         sep,
