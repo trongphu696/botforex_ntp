@@ -1,5 +1,0 @@
-MetaTrader5
-pandas
-openpyxl
-python-dotenv
-requests
