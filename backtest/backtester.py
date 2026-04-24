@@ -59,6 +59,71 @@ def _simulate_outcome(
     return {"outcome": "expired", "price": None, "pnl_r": 0.0, "bars_held": len(df_m5_full) - signal_idx}
 
 
+def _simulate_outcome_split(
+    df_m5_full: pd.DataFrame,
+    signal_idx: int,
+    direction: str,
+    entry: float,
+    sl: float,
+    tp1: float,
+    tp2: float,
+    spread: float = 0.0,
+) -> dict:
+    """
+    Split-lot simulation: Lot1 (0.5R) closes at TP1; Lot2 (0.5R) moves SL to BE after TP1, targets TP2.
+    Outcomes: loss (-1.0R) | tp1_be (+Lot1 pnl) | tp1_tp2 (+Lot1 + Lot2 pnl)
+    Phase-2 BE stop is checked before TP2 (conservative — can't infer intra-bar order from OHLC).
+    """
+    adj_entry = entry + spread if direction == "BUY" else entry - spread
+    risk = abs(adj_entry - sl)
+    if risk == 0:
+        return {"outcome": "expired", "pnl_r": 0.0, "bars_held": 0}
+
+    for j in range(signal_idx + 1, len(df_m5_full)):
+        c = df_m5_full.iloc[j]
+        bars = j - signal_idx
+
+        if direction == "BUY":
+            if c["low"] <= sl:
+                return {"outcome": "loss", "pnl_r": -1.0, "bars_held": bars}
+            # Big-bar case: TP2 reached within same bar that could contain TP1
+            if c["high"] >= tp2:
+                l1 = 0.5 * abs(tp1 - adj_entry) / risk
+                l2 = 0.5 * abs(tp2 - adj_entry) / risk
+                return {"outcome": "tp1_tp2", "pnl_r": round(l1 + l2, 2), "bars_held": bars}
+            if c["high"] >= tp1:
+                l1_pnl = 0.5 * abs(tp1 - adj_entry) / risk
+                # Phase 2: Lot2 with BE stop at adj_entry
+                for k in range(j, len(df_m5_full)):
+                    ck = df_m5_full.iloc[k]
+                    if ck["low"] <= adj_entry:   # BE stop (conservative: checked before TP2)
+                        return {"outcome": "tp1_be", "pnl_r": round(l1_pnl, 2), "bars_held": k - signal_idx}
+                    if ck["high"] >= tp2:
+                        l2 = 0.5 * abs(tp2 - adj_entry) / risk
+                        return {"outcome": "tp1_tp2", "pnl_r": round(l1_pnl + l2, 2), "bars_held": k - signal_idx}
+                return {"outcome": "tp1_be", "pnl_r": round(l1_pnl, 2), "bars_held": len(df_m5_full) - signal_idx}
+
+        else:  # SELL
+            if c["high"] >= sl:
+                return {"outcome": "loss", "pnl_r": -1.0, "bars_held": bars}
+            if c["low"] <= tp2:
+                l1 = 0.5 * abs(tp1 - adj_entry) / risk
+                l2 = 0.5 * abs(tp2 - adj_entry) / risk
+                return {"outcome": "tp1_tp2", "pnl_r": round(l1 + l2, 2), "bars_held": bars}
+            if c["low"] <= tp1:
+                l1_pnl = 0.5 * abs(tp1 - adj_entry) / risk
+                for k in range(j, len(df_m5_full)):
+                    ck = df_m5_full.iloc[k]
+                    if ck["high"] >= adj_entry:  # BE stop
+                        return {"outcome": "tp1_be", "pnl_r": round(l1_pnl, 2), "bars_held": k - signal_idx}
+                    if ck["low"] <= tp2:
+                        l2 = 0.5 * abs(tp2 - adj_entry) / risk
+                        return {"outcome": "tp1_tp2", "pnl_r": round(l1_pnl + l2, 2), "bars_held": k - signal_idx}
+                return {"outcome": "tp1_be", "pnl_r": round(l1_pnl, 2), "bars_held": len(df_m5_full) - signal_idx}
+
+    return {"outcome": "expired", "pnl_r": 0.0, "bars_held": len(df_m5_full) - signal_idx}
+
+
 def run_backtest(symbol: str, days: int = 180) -> List[dict]:
     """
     Fetch historical data and walk forward through M5 bars.
@@ -92,8 +157,8 @@ def run_backtest(symbol: str, days: int = 180) -> List[dict]:
     # Filter breakdown counters
     f: Dict[str, int] = {
         "outside_session": 0, "news_blackout": 0, "h4_h1_bias_neutral": 0,
-        "corr_block": 0, "atr_out_of_range": 0, "insufficient_data": 0,
-        "no_sweep": 0, "no_confirmation": 0, "no_fvg": 0,
+        "corr_block": 0, "atr_out_of_range": 0,
+        "insufficient_data": 0, "no_sweep": 0, "no_confirmation": 0, "no_fvg": 0,
         "sl_invalid": 0, "sl_too_close": 0, "rr_fail": 0, "antispam": 0,
         "low_confidence": 0, "equal_hl_no_mss": 0, "other": 0,
     }
@@ -144,7 +209,8 @@ def run_backtest(symbol: str, days: int = 180) -> List[dict]:
             continue
 
         # Simulate outcome
-        outcome_info = _simulate_outcome(
+        simulate = _simulate_outcome_split if config.USE_SPLIT_LOTS else _simulate_outcome
+        outcome_info = simulate(
             df_m5_full, idx,
             sig.direction, sig.entry, sig.sl, sig.tp1, sig.tp2,
             spread=spread,
@@ -153,7 +219,7 @@ def run_backtest(symbol: str, days: int = 180) -> List[dict]:
         record = {
             **sig.to_dict(),
             "outcome": outcome_info["outcome"],
-            "outcome_price": outcome_info["price"],
+            "outcome_price": outcome_info.get("price"),
             "pnl_r": outcome_info["pnl_r"],
             "bars_held": outcome_info["bars_held"],
             "backtest_bar_time": bar_time.strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -161,15 +227,19 @@ def run_backtest(symbol: str, days: int = 180) -> List[dict]:
         signals.append(record)
         last_signal_time = bar_time
 
+        label = {
+            "tp1": "TP1", "tp2": "TP2", "loss": "LOSS",
+            "tp1_be": "TP1+BE", "tp1_tp2": "TP1+TP2",
+        }.get(outcome_info["outcome"], outcome_info["outcome"].upper())
         print(
             f"  [{bar_time:%m-%d %H:%M}]  {sig.direction} {symbol}  "
             f"SL:{sig.sl}  Entry:{sig.entry}  TP1:{sig.tp1}  TP2:{sig.tp2}  "
             f"RR:{sig.rr}R  Conf:{sig.confidence_score}%  "
-            f">> {outcome_info['outcome'].upper()}  pnl:{outcome_info['pnl_r']:+.1f}R"
+            f">> {label}  pnl:{outcome_info['pnl_r']:+.1f}R"
         )
 
     # Print summary
-    wins   = sum(1 for s in signals if s["outcome"] in ("tp1", "tp2"))
+    wins   = sum(1 for s in signals if s["outcome"] in ("tp1", "tp2", "tp1_be", "tp1_tp2"))
     losses = sum(1 for s in signals if s["outcome"] == "loss")
     total  = wins + losses
     total_r = sum(s["pnl_r"] for s in signals if s["outcome"] != "expired")
@@ -196,7 +266,7 @@ def run_all(days: int = 180) -> None:
     print(f"\n[backtest] Saved {len(all_results)} records -> {config.BACKTEST_FILE}")
 
     # Overall summary
-    wins   = sum(1 for s in all_results if s["outcome"] in ("tp1", "tp2"))
+    wins   = sum(1 for s in all_results if s["outcome"] in ("tp1", "tp2", "tp1_be", "tp1_tp2"))
     losses = sum(1 for s in all_results if s["outcome"] == "loss")
     total  = wins + losses
     total_r = sum(s["pnl_r"] for s in all_results if isinstance(s.get("pnl_r"), (int, float)))

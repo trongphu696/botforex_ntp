@@ -57,6 +57,17 @@ def format_signal(signal: Signal, win_rate_info: dict = None) -> str:
         ts_display = signal.timestamp
         ts_utc_display = signal.timestamp
 
+    # Split-lot trade management block
+    split_block = ""
+    if config.USE_SPLIT_LOTS:
+        split_block = (
+            "━━━━━━━━━━━━━━━━━━━━\n"
+            "📦 <b>Quản lý 2 Lot (mỗi lot risk 1%)</b>\n"
+            f"  Lot 1 → đóng tại TP1  (<b>{signal.tp1}</b>)\n"
+            f"  Lot 2 → sau TP1, kéo SL về Entry  (<b>{signal.entry}</b>)\n"
+            f"  Lot 2 → target TP2  (<b>{signal.tp2}</b>)\n"
+        )
+
     msg = (
         f"{emoji} <b>{signal.direction} {signal.symbol}</b>  |  "
         f"Confidence: <b>{signal.confidence_score}%</b>\n"
@@ -65,6 +76,7 @@ def format_signal(signal: Signal, win_rate_info: dict = None) -> str:
         f"🛑 SL      : <b>{signal.sl}</b>  ({sl_note})\n"
         f"🎯 TP1     : <b>{signal.tp1}</b>  — RR <b>{signal.rr}R</b>\n"
         f"🎯 TP2     : <b>{signal.tp2}</b>  — RR <b>{signal.rr_tp2}R</b>\n"
+        f"{split_block}"
         "━━━━━━━━━━━━━━━━━━━━\n"
         f"📊 Setup   : {setup_str}\n"
         f"💧 Swept   : {signal.swept_level_type} @ {signal.swept_level_price}\n"

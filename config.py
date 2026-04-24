@@ -107,7 +107,8 @@ CORRELATED_PAIRS = [
 XAUUSD_USD_SOFT_BLOCK = True  # warn but don't hard-block
 
 # ── Risk ───────────────────────────────────────────────────────────────────────
-MIN_RR           = 2.0   # Minimum RR at TP1 (raised from 1.5 per user requirement)
+MIN_RR           = 1.2    # Minimum RR at TP1
+USE_SPLIT_LOTS   = False  # Single-lot: full position exits at TP1 (or TP2 on strong bar)
 SL_ATR_BUFFER    = 1.5   # ATR buffer beyond sweep wick — prevents easy SL sweeps
 TP_FALLBACK_ATR  = 3.0   # ATR fallback for TP1 when no level (must clear RR>2)
 TP2_EXTEND_MULT  = 2.0   # TP2 = TP1 + (TP1-entry) * this
