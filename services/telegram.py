@@ -81,7 +81,7 @@ def format_signal(signal: Signal, win_rate_info: dict = None) -> str:
         f"📊 Setup   : {setup_str}\n"
         f"💧 Swept   : {signal.swept_level_type} @ {signal.swept_level_price}\n"
         f"📈 Bias    : H4 {signal.bias_h4.capitalize()} | "
-        f"H1 {'>' if signal.bias_h1_ema == 'above' else '<'} EMA200\n"
+        f"H1 {'&gt;' if signal.bias_h1_ema == 'above' else '&lt;'} EMA200\n"
         f"⏰ Session : {signal.session}  |  {ts_utc_display}"
         f"{conf_warning}\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
