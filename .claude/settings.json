@@ -1,0 +1,42 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C \"d:/My Document/My_SOURCE/botforex_ntp\" log --oneline -10)",
+      "Bash(git -C \"d:/My Document/My_SOURCE/botforex_ntp\" show --stat HEAD)",
+      "Bash(git -C \"d:/My Document/My_SOURCE/botforex_ntp\" show --stat 446c142)",
+      "Bash(git -C \"d:/My Document/My_SOURCE/botforex_ntp\" show 446c142:config.py)",
+      "Bash(git -C \"d:/My Document/My_SOURCE/botforex_ntp\" show 446c142:ict_engine.py)",
+      "Bash(git -C \"d:/My Document/My_SOURCE/botforex_ntp\" show 446c142:main.py)",
+      "Bash(git -C \"d:/My Document/My_SOURCE/botforex_ntp\" show 446c142:mt5_client.py)",
+      "Bash(git -C \"d:/My Document/My_SOURCE/botforex_ntp\" show 446c142:signal_scorer.py)",
+      "Bash(git -C \"d:/My Document/My_SOURCE/botforex_ntp\" show 446c142:telegram_bot.py)",
+      "Bash(git -C \"d:/My Document/My_SOURCE/botforex_ntp\" show 446c142:backtest.py)",
+      "Bash(git -C \"d:/My Document/My_SOURCE/botforex_ntp\" show 1294b57 --stat)",
+      "Bash(git -C \"d:/My Document/My_SOURCE/botforex_ntp\" show 446c142:CLAUDE.md)",
+      "Bash(python -c ' *)",
+      "Read(//c/Users/trong/.claude/projects/d--My-Document-My-SOURCE-botforex-ntp/memory/**)",
+      "Bash(python -c \"import yfinance; print\\('yfinance:', yfinance.__version__\\)\")",
+      "Bash(pip install *)",
+      "Bash(python backtest/standalone_backtest.py --days 55 --save)",
+      "Bash(python -c \"import sys; print\\(sys.stdout.encoding\\)\")",
+      "Bash(set PYTHONIOENCODING=utf-8)",
+      "Bash(python -m py_compile backtest/standalone_backtest.py)",
+      "Bash(python backtest/standalone_backtest.py --symbol XAUUSD --days 55)",
+      "Bash(python backtest/standalone_backtest.py --all --days 55 --save)",
+      "Bash(python -m py_compile engine/signal_engine.py config.py)",
+      "Bash(python main.py --backtest 180 --symbol XAUUSD)",
+      "Bash(python -c \"from engine.signal_engine import analyze; print\\('signal_engine OK'\\)\")",
+      "Bash(python main.py --backtest 180)",
+      "Bash(python backtest/backtester.py --verbose --symbol XAUUSD)",
+      "Bash(grep -i \"xlsx\\\\|~\\\\$\")",
+      "Bash(git restore *)",
+      "Bash(git commit -m ' *)",
+      "Read(//c/Users/trong/AppData/Local/Temp/claude/d--My-Document-My-SOURCE-botforex-ntp/526fed8b-2933-4b24-b000-b350f112dd94/tasks//**)",
+      "Bash(python -m backtest.backtester 180)",
+      "Bash(echo \"PID: $!\")",
+      "Read(//tmp/**)",
+      "Bash(tee /c/Users/trong/AppData/Local/Temp/backtest_split.txt)",
+      "Bash(git add *)"
+    ]
+  }
+}
