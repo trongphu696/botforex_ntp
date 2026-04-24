@@ -1,24 +1,20 @@
-# Thông tin xác thực — KHÔNG bao giờ commit
 .env
-
-# Lịch sử tín hiệu cá nhân
 signals_history.json
-
-# Virtual environment
+storage/data/signals.json
+storage/data/trades.json
+storage/data/backtest_results.json
+storage/data/performance_metrics.json
 .venv/
 venv/
 env/
-
-# Python cache
 __pycache__/
 *.py[cod]
 *.pyo
-
-# IDE
 .vscode/
 .idea/
-
-# OS
 .DS_Store
 Thumbs.db
 result/
+backtest_results.csv
+backtest_results.xlsx
+*.log
