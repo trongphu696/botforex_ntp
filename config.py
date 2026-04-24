@@ -7,6 +7,10 @@ load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
 CHAT_ID   = os.getenv("CHAT_ID", "")
 
+# ── Position Sizing ────────────────────────────────────────────────────────────
+ACCOUNT_BALANCE = float(os.getenv("ACCOUNT_BALANCE", "1000"))
+RISK_PCT        = float(os.getenv("RISK_PCT", "1.0"))   # % of balance per trade
+
 # ── MT5 credentials (optional — broker terminal can be pre-logged-in) ───────────
 MT5_LOGIN    = os.getenv("MT5_LOGIN", "")
 MT5_PASSWORD = os.getenv("MT5_PASSWORD", "")
@@ -160,6 +164,23 @@ SPREAD = {
     "NZDUSD": 0.00015,
     "_default": 0.00010,
 }
+
+
+# ── Lot Size Config ────────────────────────────────────────────────────────────
+# contract_size: units per standard lot (oz for gold, base currency units for FX)
+LOT_CONTRACT_SIZE = {
+    "XAUUSD": 100,        # 100 troy oz
+    "GBPUSD": 100_000,
+    "AUDUSD": 100_000,
+    "NZDUSD": 100_000,
+    "USDJPY": 100_000,
+    "GBPJPY": 100_000,
+}
+# Pairs where quote currency is JPY — P&L needs /entry conversion to USD
+JPY_QUOTED = {"USDJPY", "GBPJPY"}
+
+LOT_MIN  = 0.01   # minimum lot size
+LOT_STEP = 0.01   # lot increment
 
 
 def validate():

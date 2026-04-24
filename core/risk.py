@@ -150,3 +150,33 @@ def calc_rr_tp2(entry: float, sl: float, tp2: float) -> float:
     if risk == 0:
         return 0.0
     return round(abs(tp2 - entry) / risk, 2)
+
+
+def calculate_lot_size(symbol: str, entry: float, sl: float) -> float:
+    """
+    Risk-based lot sizing: risk exactly RISK_PCT% of ACCOUNT_BALANCE.
+
+    USD-quoted (XAUUSD, GBPUSD, AUDUSD, NZDUSD):
+        lot = risk_usd / (sl_distance × contract_size)
+
+    JPY-quoted (USDJPY, GBPJPY):
+        P&L per lot = sl_distance × contract_size / entry  (in USD)
+        lot = risk_usd × entry / (sl_distance × contract_size)
+    """
+    sl_distance = abs(entry - sl)
+    if sl_distance == 0:
+        return config.LOT_MIN
+
+    risk_usd      = config.ACCOUNT_BALANCE * config.RISK_PCT / 100.0
+    contract_size = config.LOT_CONTRACT_SIZE.get(symbol, 100_000)
+
+    if symbol in config.JPY_QUOTED:
+        raw = risk_usd * entry / (sl_distance * contract_size)
+    else:
+        raw = risk_usd / (sl_distance * contract_size)
+
+    # Floor to nearest LOT_STEP, enforce minimum
+    # Use round() to neutralise IEEE-754 drift before floor division
+    step = config.LOT_STEP
+    lot  = max(config.LOT_MIN, round(int(round(raw / step, 8)) * step, 2))
+    return lot

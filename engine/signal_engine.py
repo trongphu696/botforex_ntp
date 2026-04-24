@@ -157,6 +157,8 @@ def analyze(
 
     direction = "BUY" if bias == "bullish" else "SELL"
 
+    lot_size = risk.calculate_lot_size(symbol, entry, sl)
+
     signal = Signal(
         id=uuid.uuid4().hex[:12],
         symbol=symbol,
@@ -179,6 +181,7 @@ def analyze(
         fvg_midpoint=fvg_result.midpoint,
         atr_m5=atr_m5,
         timestamp=now_utc.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        lot_size=lot_size,
     )
 
     return signal, ""

@@ -66,6 +66,7 @@ class Signal:
     fvg_midpoint: float
     atr_m5: float
     timestamp: str
+    lot_size: float = 0.01
     status: Literal["open", "tp1", "tp2", "loss", "expired"] = "open"
     outcome_price: Optional[float] = None
     outcome_time: Optional[str] = None
@@ -94,6 +95,7 @@ class Signal:
             "fvg_midpoint": self.fvg_midpoint,
             "atr_m5": round(self.atr_m5, 6),
             "timestamp": self.timestamp,
+            "lot_size": self.lot_size,
             "status": self.status,
             "outcome_price": self.outcome_price,
             "outcome_time": self.outcome_time,

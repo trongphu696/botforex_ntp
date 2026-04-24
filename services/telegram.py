@@ -68,6 +68,17 @@ def format_signal(signal: Signal, win_rate_info: dict = None) -> str:
             f"  Lot 2 → target TP2  (<b>{signal.tp2}</b>)\n"
         )
 
+    contract  = config.LOT_CONTRACT_SIZE.get(signal.symbol, 100_000)
+    sl_dist   = abs(signal.entry - signal.sl)
+    if signal.symbol in config.JPY_QUOTED:
+        actual_risk = signal.lot_size * sl_dist * contract / signal.entry
+    else:
+        actual_risk = signal.lot_size * sl_dist * contract
+    lot_line  = (
+        f"💰 Lot Size: <b>{signal.lot_size}</b> lot  "
+        f"(~${actual_risk:.2f} risk / {config.RISK_PCT:.0f}% of ${config.ACCOUNT_BALANCE:,.0f})"
+    )
+
     msg = (
         f"{emoji} <b>{signal.direction} {signal.symbol}</b>  |  "
         f"Confidence: <b>{signal.confidence_score}%</b>\n"
@@ -77,6 +88,8 @@ def format_signal(signal: Signal, win_rate_info: dict = None) -> str:
         f"🎯 TP1     : <b>{signal.tp1}</b>  — RR <b>{signal.rr}R</b>\n"
         f"🎯 TP2     : <b>{signal.tp2}</b>  — RR <b>{signal.rr_tp2}R</b>\n"
         f"{split_block}"
+        "━━━━━━━━━━━━━━━━━━━━\n"
+        f"{lot_line}\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
         f"📊 Setup   : {setup_str}\n"
         f"💧 Swept   : {signal.swept_level_type} @ {signal.swept_level_price}\n"
